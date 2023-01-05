@@ -1,3 +1,0 @@
-data_rate,1
-time_format,%Y-%m-%d-%H-%M-%S-%f
-exclude_metrics,"po,tg"
