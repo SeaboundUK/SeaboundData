@@ -1,0 +1,5 @@
+data_rate,2
+time_format,%Y-%m-%d-%H-%M-%S
+exclude_metrics,"ms,pg"
+mass_smoothing_start_time,2022-12-01-11-21-04
+mass_smoothing_end_time,2022-12-01-13-32-47

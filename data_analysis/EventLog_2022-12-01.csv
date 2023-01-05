@@ -1,0 +1,15 @@
+Time,Description
+2022-12-01-11-15-00,restarted generator with no filter
+2022-12-01-11-17-00,added 50 kw load to gen
+2022-12-01-11-19-00,1st load (113.9)
+2022-12-01-11-36-00,2nd load (128.9)
+2022-12-01-11-51-00,3rd load (128.9)
+2022-12-01-11-58-00,4th load (138.8)
+2022-12-01-12-05-00,generator temp at 305
+2022-12-01-12-10-00,5th load (134)
+2022-12-01-12-28-00,6th load (140.2)
+2022-12-01-12-47-00,7th load (123.9)
+2022-12-01-12-55-00,8th load (129.1)
+2022-12-01-13-09-00,9th load (113)
+2022-12-01-13-32-00,"calling it on adding more lime, pressure closing in on burst disc limit"
+2022-12-01-13-56-00,burst disc blew

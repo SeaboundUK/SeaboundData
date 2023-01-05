@@ -1,0 +1,11 @@
+Time,Description
+2022-12-14-09-18-14,starting generator
+2022-12-14-09-22-21,adeding 50kw load
+2022-12-14-10-07-12,"note on gas analyzers, at this point psample is above limit for inlet (temp also above normal operating range)"
+2022-12-14-10-21-45,turning on bottom vvalve
+2022-12-14-10-39-37,gas analyzer inlet pressure back into normal operating range
+2022-12-14-10-41-13,increasing generator load to 75kw
+2022-12-14-10-42-25,generator load to 100kW
+2022-12-14-12-53-51,generator load to 0 kw
+2022-12-14-12-59-01,generatoir off
+2022-12-14-14-21-17,moved tcool to a more central position in the pile
