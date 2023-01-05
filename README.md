@@ -1,10 +1,19 @@
-# Home
+# SeaboundData
 
-Select from the following tests:
+Make sure you are using Python 3.9 (or Python 3.x)
 
-11/25/2022 - [First Outdoor Pressure Drop Test](https://ryanseabound.github.io/SeaboundData/FinalNotebooks/11_25_2022.html)
-12/02/2022 - [Mostly Full Carbonator Pressure Drop Test](https://ryanseabound.github.io/SeaboundData/FinalNotebooks/12_02_2022.html)
-12/14/2022 - [Moving Bed, Partial Fill](https://ryanseabound.github.io/SeaboundData/FinalNotebooks/12_14_2022.html)
-12/XX/2022 - Coming Soon
+    cd [path to SeaboundData]
+    python -m venv myenv
+    source myenv/bin/activate
+    .\myenv\Scripts\activate    # *for windows users* 
+    pip install -r requirements.txt
 
-For testing summaries, click [here](https://www.notion.so/seabound/Testing-Summaries-Learnings-cc19514ca29f468ebe0ddfec9c0cf33f)
+
+In the future, always do this before running the scripts:
+
+    source myenv/bin/activate
+    .\myenv\Scripts\activate    # *for windows users*
+
+To export to html:
+
+    jupyter nbconvert --execute --to html --template lab --no-input DataAnalysis.ipynb --TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags remove_cell
