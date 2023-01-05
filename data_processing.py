@@ -261,10 +261,11 @@ def add_calculated_columns(main_df, CONFIG):
     # had to hard code the str_to_datetime
     
     main_df["datetime"] = main_df["datetime"].map(str_to_datetime)
-    
     return main_df
-        
-        
+
+def coarse_data(df, n=100):
+    coarse_df = df[df.reset_index().index % n == 0]
+    return coarse_df
         
         
         
