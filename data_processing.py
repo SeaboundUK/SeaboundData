@@ -24,7 +24,7 @@ def butter_lowpass_filter(data, cutoff, fs, order):
 
 # string to datetime
 
-INPUT_DATETIME_FORMAT = "%Y-%m-%d-%H-%M-%S"
+INPUT_DATETIME_FORMAT = "%Y-%m-%d-%H-%M-%S-%f"
 def str_to_datetime(s, from_=INPUT_DATETIME_FORMAT):
     """Convert a string to a datetime object"""
     return datetime.strptime(s, from_)
