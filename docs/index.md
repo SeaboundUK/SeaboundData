@@ -2,7 +2,7 @@
 
 Select from the following tests:
 
-November 25, 2022 - [First Outdoor Pressure Drop Test](https://ryanseabound.github.io/SeaboundData/docs/11_25_2022.html)<br />
+November 25, 2022 - [First Outdoor Pressure Drop Test](/11_25_2022.html)<br />
 December 02, 2022 - [Mostly Full Carbonator Pressure Drop Test](https://ryanseabound.github.io/SeaboundData/docs/12_02_2022.html)<br />
 December 14, 2022 - [Moving Bed, Partial Fill](https://ryanseabound.github.io/SeaboundData/docs/12_14_2022.html)<br />
 January, 2023 - Coming Soon<br />
