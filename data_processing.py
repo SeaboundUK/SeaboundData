@@ -56,65 +56,67 @@ def process_mass(original_df):
     ms = 0
     m_available = 0
     delta_t = 0
-    delta_m = 0
+    delta_hop = 0
+    delta_carb = 0
 
-    length = original_df.shape[0]
+    ms_list = [0]*original_df.shape[0]
+    state_list = original_df["state"].to_list()
+    m_add_list = original_df["m_add"].to_list()
+    datetime_list = original_df["datetime"].to_list()
 
-    ms_list = [0]*length
+    mass_enum = enumerate(zip(state_list,m_add_list,datetime_list))
+    last_time = original_df.loc[1].at["datetime"]
 
-    for index in range(1,length):
+    for index, (state, m_add, datetime_) in mass_enum:
         
-        state = original_df.loc[index].at["state"]
-        m_add = original_df.loc[index].at["m_add"]
-
-        delta_t = delta_second(original_df.loc[index].at["datetime"],original_df.loc[index-1].at["datetime"])
-
+        this_time = datetime_
+        delta_t = delta_second(this_time,last_time)
+        delta_hop = 0
+        delta_carb = 0
+        
         # check if there's new mass available
         if m_add != 0:
             m_available = m_available + m_add
 
+        # ----- STATES -------
         # filling
         if state == 2:
             if m_available > 0:
-                delta_m = m_dot_valve(50)*delta_t       # mass is in the hopper, add it
-            else:
-                delta_m = 0
+                delta_hop = -m_dot_valve(50)*delta_t       # mass is in the hopper, add it
+                delta_carb = -delta_hop
 
         # emptying
         elif state == 3:
             if ms > 0:
-                delta_m = -m_dot_valve(50)*delta_t      # mass is in the carbonator, remove it
-            else:
-                delta_m = 0
+                delta_carb = -m_dot_valve(50)*delta_t      # mass is in the carbonator, remove it
+
 
         # moving bed
         elif state == 4:
-            if m_available > 0:     # if there's mass in the hopper, its a net positive delta for this case
-                delta_m = (m_dot_valve(50)-m_dot_valve(13))*delta_t
-            elif m_available == 0 and ms > 0:       # no mass in hopper, removing at slow rate
-                delta_m = -m_dot_valve(13)*delta_t
-            else:           # no mass anywhere, don't do anything
-                delta_m = 0
 
-        else:
-            delta_m = 0
+            if m_available > 0:     # if there's mass in the hopper, its a net positive delta for this case
+                delta_hop = -m_dot_valve(50)*delta_t
+                delta_carb = (m_dot_valve(50)-m_dot_valve(13))*delta_t
+
+            elif m_available == 0 and ms > 0:       # no mass in hopper, removing at slow rate
+                delta_carb = -m_dot_valve(13)*delta_t
 
         # mass balancing
-        if delta_m != 0:
+        if delta_hop != 0:      # mass removed from hopper
+
+            if abs(delta_hop) > m_available:        # trying to remove more mass than exists
+                m_available = 0
+            else:
+                m_available = m_available + delta_hop
+
+        if delta_carb != 0:     # mass added or removed from carbonator
             
-            # case 1: trying to remove mass that doesn't exist
-            if delta_m < 0 and abs(delta_m) > ms:
-                delta_m = -m_available
+            if (delta_carb < 0) and (abs(delta_carb) > ms):    # trying to remove more mass than exists
+                ms = 0
+            else:
+                ms = ms + delta_carb
 
-            # case 2: trying to add mass that doesn't exist
-            elif delta_m > 0 and delta_m > m_available:
-                delta_m = m_available
-
-            if delta_m > 0:     # carbonator can only gain mass if available subsequently decreases
-                m_available = m_available - delta_m
-
-            ms = ms + delta_m
-
+        last_time = this_time
         ms_list[index] = ms  # place current value into list
 
     return ms_list
