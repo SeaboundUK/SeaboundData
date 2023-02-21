@@ -9,4 +9,5 @@ January 11, 2023  - [Moving Bed, Higher Load](/01_11_2023.html)<br />
 
 For testing summaries, click [here](https://www.notion.so/seabound/Testing-Summaries-Learnings-cc19514ca29f468ebe0ddfec9c0cf33f).
 
-![Prototype_schematic](/docs/prototype_schematic.png?raw=true "Prototype schematic")
+Prototype schematic:
+![Prototype_schematic](/prototype_schematic.png)
