@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\rmcla\Documents\GitHub\SeaboundData\myenv"
+VIRTUAL_ENV="C:\Users\rmcla\Documents\0-Seabound\git_hub_local_folders\SeaboundData\myenv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

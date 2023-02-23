@@ -22,5 +22,6 @@
   {"metric_name": "mdoto"},
   {"metric_name": "gai"},
   {"metric_name": "gao"},
-  {"metric_name": "ms"}
+  {"metric_name": "ms"},
+  {"metric_name": "sfl"}
 ]

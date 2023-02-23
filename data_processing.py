@@ -224,7 +224,6 @@ def coarse_apply(series, func, n=300):
     return results
 
 # Below is the Main Function
-
 def add_calculated_columns(main_df, CONFIG):
     """Take in a Pandas DataFrame and a config dictionary. 
     
@@ -238,7 +237,7 @@ def add_calculated_columns(main_df, CONFIG):
     order = 1 
 
     excluded_metrics = CONFIG["exclude_metrics"]
-    METRICS_TO_APPLY_LOWPASS= ["pg", "po", "pv","pi"] + ["dpo", "dpf", "dpv"] + ["mdoti", "mdoto"]
+    METRICS_TO_APPLY_LOWPASS= ["pg", "po", "pv","pi"] + ["dpo", "dpf", "dpv"] + ["mdoti", "mdoto"] + ["sfl"]
 
     for metric_name in METRICS_TO_APPLY_LOWPASS:
         filtered_data = butter_lowpass_filter(main_df[metric_name], cutoff, fs, order)
@@ -258,7 +257,6 @@ def add_calculated_columns(main_df, CONFIG):
     elif "m_add" not in excluded_metrics:
         main_df['ms'] = process_mass(main_df)
         main_df["fill_height"] = coarse_apply(main_df["ms"], solid_mass_to_fill_height)
-    
     
     # had to hard code the str_to_datetime
     

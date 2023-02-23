@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\rmcla\Documents\GitHub\SeaboundData\myenv
+set VIRTUAL_ENV=C:\Users\rmcla\Documents\0-Seabound\git_hub_local_folders\SeaboundData\myenv
 
 if not defined PROMPT set PROMPT=$P$G
 

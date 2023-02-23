@@ -3,7 +3,7 @@
 Make sure you are using Python 3.9 (or Python 3.x)
 
     cd [path to SeaboundData]
-    python -m venv myenv
+    python3.10 -m venv myenv
     source myenv/bin/activate
     .\myenv\Scripts\activate    # *for windows users* 
     pip install -r requirements.txt
