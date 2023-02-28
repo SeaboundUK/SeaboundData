@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from datetime import datetime
 from scipy.signal import butter,filtfilt
 from sympy import symbols, solve
@@ -21,13 +22,6 @@ def butter_lowpass_filter(data, cutoff, fs, order):
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     y = filtfilt(b, a, data)
     return y
-
-# string to datetime
-
-INPUT_DATETIME_FORMAT = "%Y-%m-%d-%H-%M-%S-%f"
-def str_to_datetime(s, from_=INPUT_DATETIME_FORMAT):
-    """Convert a string to a datetime object"""
-    return datetime.strptime(s, from_)
 
 # Calculate delta in seconds between two points (requires %f format)
 
@@ -122,63 +116,6 @@ def process_mass(original_df):
     return ms_list
 
 
-## Smooth mass curve
-
-def smooth_stepwise_inc_curve(from_time, to_time, timestamps, data, time_format):
-    """Only works for monotonically increasing stepwise curve
-    
-    from_time : the timestamp from which the smoothing starts
-    to_time : the timestamp where the smoothing stops
-    timestamps, data: x and y coordinates of the curve to be smoothed
-    time_format: the time format to use to parse from_time and to_time
-    """
-    from_time = datetime.strptime(from_time, time_format)
-    to_time = datetime.strptime(to_time, time_format)
-    # Get the index corresponding to the given value from timestamps
-    start_index = timestamps[timestamps == from_time].index[0]
-    end_index = timestamps[timestamps == to_time].index[0]
-
-    # Trim timestamps and timeseries to [start_index, end_index]
-    # trimmed_timestamps = timestamps[start_index:end_index]
-    trimmed_data = list(data[start_index:end_index])
-    trimmed_data_copy = list(data[start_index:end_index])
-
-    # Find major points (the rightmost point of each horizontal line segment)
-    major_indices = [len(trimmed_data)-1]
-    major_points = []
-
-    while len(trimmed_data)>0:
-        major_points.append(np.max(trimmed_data))
-        major_indices.append(np.argmax(trimmed_data)-1)
-        trimmed_data = trimmed_data[:major_indices[-1]+1]
-
-    major_indices[-1] = 0
-    major_points.append(major_points[-1])
-    major_indices.reverse()
-    major_points.reverse()
-
-    # Linear interpolation between major points
-    list_buffer = [[major_points[0]]]
-    for x0, x1, y0, y1 in zip(major_indices[:-1], major_indices[1:], major_points[:-1], major_points[1:]):
-        line_seg = np.linspace(y0, y1, x1-x0+1)
-        list_buffer.append(line_seg[1:])
-
-    # Flatten list of lists
-    smoothed_trimmed_data = list(np.concatenate(list_buffer).flat)
-
-    # Visualize for debugging
-    # import matplotlib.pyplot as plt
-    # plt.plot(trimmed_data_copy)
-    # plt.scatter(major_indices, major_points)
-    # plt.plot(smoothed_trimmed_data)
-    # plt.show()
-
-    # Place the smoothed segment back to original data series
-    smoothed_data = data.copy()
-    smoothed_data[start_index:end_index] = smoothed_trimmed_data
-
-    return smoothed_data
-
 # Convert weight to volume for quicklime
 
 def quicklime_weight_to_volume(w, bulkdensity=955):
@@ -223,7 +160,25 @@ def coarse_apply(series, func, n=300):
         prev_val = results[j]
     return results
 
-# Below is the Main Function
+# Below are the exported functions
+
+def remove_bad_columns(main_df, CONFIG):
+    temp = set(main_df.columns)
+    
+    # Remove columns where all elements are NaNs
+    main_df = main_df.dropna(axis="columns", how='all')
+    
+    # Remove columns with all zeros
+    for each_col in main_df.columns:
+        if pd.api.types.is_numeric_dtype(main_df[each_col]) and (main_df[each_col].mean() == 0):
+            main_df = main_df.drop(columns=[each_col])
+    
+    # Remove columns that are excluded in CONFIG
+    main_df = main_df.drop(columns=CONFIG["exclude_metrics"], errors='ignore')
+    
+    print("Columns removed:", temp - set(main_df.columns))
+    
+    return main_df
 
 def add_calculated_columns(main_df, CONFIG):
     """Take in a Pandas DataFrame and a config dictionary. 
@@ -232,39 +187,27 @@ def add_calculated_columns(main_df, CONFIG):
     e.g. pg_lowpass, po_lowpass, smooth_ms, fill_height, etc.
     
     """
+    
+    # Add lowpass filters
     fs = float(CONFIG['data_rate'])
-
     cutoff = fs/80     # desired cutoff frequency of the filter, Hz
     order = 1 
-
-    excluded_metrics = CONFIG["exclude_metrics"]
     METRICS_TO_APPLY_LOWPASS= ["pg", "po", "pv","pi"] + ["dpo", "dpf", "dpv"] + ["mdoti", "mdoto"]
-
     for metric_name in METRICS_TO_APPLY_LOWPASS:
-        filtered_data = butter_lowpass_filter(main_df[metric_name], cutoff, fs, order)
-        lowpass_name = metric_name + "_lowpass"
-        main_df[lowpass_name] = filtered_data
+        if metric_name in main_df:
+            filtered_data = butter_lowpass_filter(main_df[metric_name], cutoff, fs, order)
+            lowpass_name = metric_name + "_lowpass"
+            main_df[lowpass_name] = filtered_data
 
-    if "mass_smoothing_start_time" in CONFIG:
-        main_df["smooth_ms"] = smooth_stepwise_inc_curve(
-            CONFIG["mass_smoothing_start_time"], 
-            CONFIG["mass_smoothing_end_time"],
-            main_df["datetime"], 
-            main_df["ms"],
-            CONFIG["time_format"])
-        # Apply function element-wise, use custom coarse_apply function to speed things up
-        main_df["fill_height"] = coarse_apply(main_df["smooth_ms"], solid_mass_to_fill_height)
+    # Calculate ms from m_add
+    if ("m_add" in main_df) and ("ms" not in main_df):
+        main_df['ms'] = process_mass(main_df) # converts m_add to ms
     
-    elif "m_add" not in excluded_metrics:
-        main_df['ms'] = process_mass(main_df)
-        main_df["fill_height"] = coarse_apply(main_df["ms"], solid_mass_to_fill_height)
-    elif ("ms" in main_df) and ("ms" not in excluded_metrics) and ("fill_height" not in excluded_metrics):
+    # Calculate fill_height from ms
+    if ("ms" in main_df) and ("fill_height" not in main_df):
         main_df["fill_height"] = coarse_apply(main_df["ms"], solid_mass_to_fill_height)
     
     
-    # pass time_format from CONFIG to str_to_datetime()
-    input_datetime_format = CONFIG["time_format"]
-    main_df["datetime"] = main_df["datetime"].map(lambda _: str_to_datetime(_, input_datetime_format))
     return main_df
 
 def coarse_data(df, n=100):
@@ -275,6 +218,75 @@ def coarse_data(df, n=100):
         
 ###############
 
+# ## Archived usage of smooth_stepwise_inc_curve()
+#     if "mass_smoothing_start_time" in CONFIG:
+#         main_df["smooth_ms"] = smooth_stepwise_inc_curve(
+#             CONFIG["mass_smoothing_start_time"], 
+#             CONFIG["mass_smoothing_end_time"],
+#             main_df["datetime"], 
+#             main_df["ms"],
+#             CONFIG["time_format"])
+#         # Apply function element-wise, use custom coarse_apply function to speed things up
+#         main_df["fill_height"] = coarse_apply(main_df["smooth_ms"], solid_mass_to_fill_height)
+
+        
+# ## Smooth mass curve
+
+# def smooth_stepwise_inc_curve(from_time, to_time, timestamps, data, time_format):
+#     """Only works for monotonically increasing stepwise curve
+    
+#     from_time : the timestamp from which the smoothing starts
+#     to_time : the timestamp where the smoothing stops
+#     timestamps, data: x and y coordinates of the curve to be smoothed
+#     time_format: the time format to use to parse from_time and to_time
+#     """
+#     from_time = datetime.strptime(from_time, time_format)
+#     to_time = datetime.strptime(to_time, time_format)
+#     # Get the index corresponding to the given value from timestamps
+#     start_index = timestamps[timestamps == from_time].index[0]
+#     end_index = timestamps[timestamps == to_time].index[0]
+
+#     # Trim timestamps and timeseries to [start_index, end_index]
+#     # trimmed_timestamps = timestamps[start_index:end_index]
+#     trimmed_data = list(data[start_index:end_index])
+#     trimmed_data_copy = list(data[start_index:end_index])
+
+#     # Find major points (the rightmost point of each horizontal line segment)
+#     major_indices = [len(trimmed_data)-1]
+#     major_points = []
+
+#     while len(trimmed_data)>0:
+#         major_points.append(np.max(trimmed_data))
+#         major_indices.append(np.argmax(trimmed_data)-1)
+#         trimmed_data = trimmed_data[:major_indices[-1]+1]
+
+#     major_indices[-1] = 0
+#     major_points.append(major_points[-1])
+#     major_indices.reverse()
+#     major_points.reverse()
+
+#     # Linear interpolation between major points
+#     list_buffer = [[major_points[0]]]
+#     for x0, x1, y0, y1 in zip(major_indices[:-1], major_indices[1:], major_points[:-1], major_points[1:]):
+#         line_seg = np.linspace(y0, y1, x1-x0+1)
+#         list_buffer.append(line_seg[1:])
+
+#     # Flatten list of lists
+#     smoothed_trimmed_data = list(np.concatenate(list_buffer).flat)
+
+#     # Visualize for debugging
+#     # import matplotlib.pyplot as plt
+#     # plt.plot(trimmed_data_copy)
+#     # plt.scatter(major_indices, major_points)
+#     # plt.plot(smoothed_trimmed_data)
+#     # plt.show()
+
+#     # Place the smoothed segment back to original data series
+#     smoothed_data = data.copy()
+#     smoothed_data[start_index:end_index] = smoothed_trimmed_data
+
+#     return smoothed_data
+# 
 ## Solve for D0 particle diameter
 #
 # def calculate_effective_particle_size(gas_mass_flow, temperature, CO2_concentration, pressure, fill_height, P0):
