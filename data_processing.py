@@ -258,11 +258,13 @@ def add_calculated_columns(main_df, CONFIG):
     elif "m_add" not in excluded_metrics:
         main_df['ms'] = process_mass(main_df)
         main_df["fill_height"] = coarse_apply(main_df["ms"], solid_mass_to_fill_height)
+    elif ("ms" in main_df) and ("ms" not in excluded_metrics) and ("fill_height" not in excluded_metrics):
+        main_df["fill_height"] = coarse_apply(main_df["ms"], solid_mass_to_fill_height)
     
     
-    # had to hard code the str_to_datetime
-    
-    main_df["datetime"] = main_df["datetime"].map(str_to_datetime)
+    # pass time_format from CONFIG to str_to_datetime()
+    input_datetime_format = CONFIG["time_format"]
+    main_df["datetime"] = main_df["datetime"].map(lambda _: str_to_datetime(_, input_datetime_format))
     return main_df
 
 def coarse_data(df, n=100):
