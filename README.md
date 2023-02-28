@@ -8,11 +8,17 @@ Make sure you are using Python 3.9 (or Python 3.x)
     .\myenv\Scripts\activate    # *for windows users* 
     pip install -r requirements.txt
 
+To make the virtual environment kernel available in Jupyter Notebook:
 
-In the future, always do this before running the scripts:
+    ipython kernel install --user --name=myenv
+        
+In the future, always do this before running the scripts or starting Jupyter:
 
     source myenv/bin/activate
     .\myenv\Scripts\activate    # *for windows users*
+
+
+
 
 To export to html:
 
