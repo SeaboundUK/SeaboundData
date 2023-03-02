@@ -1,3 +1,4 @@
 data_rate,1
 time_format,%Y-%m-%d-%H-%M-%S-%f
+event_time_format,%Y-%m-%d-%H-%M-%S
 exclude_metrics,"po,tg"
